@@ -1,0 +1,2 @@
+Type integers, each follow by Enter; or just Enter to finish
+integer: integer: integer: integer: integer: integer: integer: integer: integer: integer: count = 9, total = 45, mean = 5.0
