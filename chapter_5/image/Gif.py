@@ -1,0 +1,2 @@
+def gif():
+    print('gif')

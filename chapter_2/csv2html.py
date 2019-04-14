@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
-import sys
+
+import xml.sax.saxutils
+import optparse
 
 
-def main():
-    maxwidth = 100
+def main(maxwidth):
     print_start()
     count = 0
     while True:
         try:
             line = input()
             if count == 0:
-                color = 'lightgreen'
+                color = "lightgreen"
             elif count % 2:
-                color = 'white'
+                color = "white"
             else:
-                color = 'lightyellow'
+                color = "lightyellow"
             print_line(line, color, maxwidth)
             count += 1
         except EOFError:
@@ -23,42 +24,67 @@ def main():
 
 
 def print_start():
-    print('<table border="1">')
+    print("<table border='1'>")
 
 
 def print_line(line, color, maxwidth):
-    print('<tr bgcolor="{0}">'.format(color))
+    print("<tr bgcolor='{0}'>".format(color))
     fields = extract_fields(line)
     for field in fields:
         if not field:
             print("<td></td>")
         else:
-            number = field.replace(',', '')
+            number = field.replace(",", "")
             try:
                 x = float(number)
-                print('<td align="right">{0:d}</td>'.format(round(x)))
+                print("<td align='right'>{0:d}</td>".format(round(x)))
             except ValueError:
                 field = field.title()
-                field = field.replace(' And ', ' and ')
-                field = escape_html(field)
+                field = field.replace(" And ", " and ")
                 if len(field) <= maxwidth:
-                    print('<td>{0}</td>'.format(field))
+                    field = xml.sax.saxutils.escape(field)
                 else:
-                    print('<td>{0:.{1}} ...</td>'.format(field, maxwidth))
-    print('</tr>')
+                    field = "{0} ...".format(
+                        xml.sax.saxutils.escape(field[:maxwidth]))
+                print("<td>{0}</td>".format(field))
+    print("</tr>")
 
 
 def extract_fields(line):
-    pass
-
-
-def escape_html(field):
-    pass
+    fields = []
+    field = ""
+    quote = None
+    for c in line:
+        if c in "\"'":
+            if quote is None:  # start of quoted string
+                quote = c
+            elif quote == c:  # end of quoted string
+                quote = None
+            else:
+                field += c  # other quote inside quoted string
+            continue
+        if quote is None and c == ",":  # end of a field
+            fields.append(field)
+            field = ""
+        else:
+            field += c  # accumulating a field
+    if field:
+        fields.append(field)  # adding the last field
+    return fields
 
 
 def print_end():
-    print('</table>')
+    print("</table>")
 
 
 if __name__ == '__main__':
-    main()
+    parser = optparse.OptionParser()
+    parser.add_option('-w', '--maxwidth', dest='maxwidth', type='int',
+                      help=('the maximum number of characters that can be '
+                            'output to string fields [default: %default]'))
+    parser.add_option('-f', '--format', dest='format',
+                      help=('the format used for outputting numbers '
+                            '[default: %default]'))
+    parser.set_defaults(maxwidth=100, format="0.f")
+    opts, args = parser.parse_args()
+    main(opts.maxwidth)

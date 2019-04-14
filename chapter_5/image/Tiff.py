@@ -1,0 +1,2 @@
+def tiff():
+    print('tiff')

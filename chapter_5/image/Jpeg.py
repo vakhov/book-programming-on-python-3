@@ -1,0 +1,2 @@
+def jpeg():
+    print('jpeg')
